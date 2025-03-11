@@ -1,6 +1,6 @@
 import requests
 from flask import Flask
-
+from waitress import serve
 
 
 def get_credentials() -> dict[str, str]:
@@ -21,7 +21,9 @@ def get_credentials() -> dict[str, str]:
 
 
 def get_clients():
-    credentials=get_credentials()
+    # Получаем данные для авторизации из файла
+    credentials = get_credentials()
+
     # Создаем сессию для сохранения cookies
     session = requests.Session()
 
@@ -60,14 +62,17 @@ def get_clients():
         return f'Ошибка запроса по клиентам: {clients_response.status_code}'
 
 
-
 # Создаем Flask приложение
 app = Flask(__name__)
+
 
 # Маршрут для получения данных о подключенных клиентах
 @app.route('/unifi/get_clients', methods=['GET'])
 def unifi_get_clients():
     return get_clients()
 
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5003, debug=True)
+    serve(app, host='0.0.0.0', port=5003)
+
+# docker-compose up -d --build
