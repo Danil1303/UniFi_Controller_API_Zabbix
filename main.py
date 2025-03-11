@@ -1,15 +1,27 @@
 import requests
 from flask import Flask
 
-# Данные для аутентификации
-unifi_url = ''
-username = ''
-password = ''
+
+
+def get_credentials() -> dict[str, str]:
+    credentials = {'unifi_url': '',
+                   'username': '',
+                   'password': ''}
+    try:
+        for key in credentials.keys():
+            with open('credentials.txt', 'r') as file:
+                for line in file:
+                    line = line.strip()
+                    if key in line:
+                        credentials[key] = line.split('=')[1]
+                        break
+        return credentials
+    except Exception as e:
+        print(f'Произошла ошибка: {e}')
 
 
 def get_clients():
-
-
+    credentials=get_credentials()
     # Создаем сессию для сохранения cookies
     session = requests.Session()
 
@@ -23,11 +35,11 @@ def get_clients():
 
     # Логинимся в UniFi Controller
     login_payload = {
-        'username': username,
-        'password': password
+        'username': credentials['username'],
+        'password': credentials['password']
     }
 
-    login_url = f'{unifi_url}/api/login'
+    login_url = f'{credentials['unifi_url']}/api/login'
     response = session.post(login_url, json=login_payload, headers=headers)
 
     # Проверяем успешность входа
@@ -36,7 +48,7 @@ def get_clients():
         exit()
 
     # Получаем информацию о подключенных клиентах
-    clients_url = f'{unifi_url}/api/s/default/stat/sta'
+    clients_url = f'{credentials['unifi_url']}/api/s/default/stat/sta'
     clients_response = session.get(clients_url, headers=headers)
     # Закрываем сессию
     session.close()
